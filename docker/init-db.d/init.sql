@@ -1,15 +1,12 @@
 
 CREATE TABLE marks (
     mark_id SERIAL PRIMARY KEY,
-    color TEXT,
     image TEXT NOT NULL,
     map TEXT NOT NULL,
     positionx NUMERIC NOT NULL DEFAULT 0,
-    positionx2 NUMERIC NOT NULL DEFAULT 0,
     positiony NUMERIC NOT NULL DEFAULT 0,
-    positiony2 NUMERIC NOT NULL DEFAULT 0,
-    size NUMERIC NOT NULL,
-    type TEXT NOT NULL
+    sizex NUMERIC NOT NULL,
+    sizey NUMERIC NOT NULL
 );
 
 CREATE TABLE maps (
@@ -97,14 +94,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.store(_color TEXT, _image TEXT, _map TEXT, _positionx NUMERIC, _positionx2 NUMERIC, _positiony NUMERIC, _positiony2 NUMERIC, _size NUMERIC, _type TEXT)
+CREATE OR REPLACE FUNCTION public.store( _image TEXT, _map TEXT, _positionx NUMERIC, _positiony NUMERIC, _sizex NUMERIC, _sizey NUMERIC)
 RETURNS JSONB AS $$
 DECLARE 
     result JSONB;
 BEGIN
     --Insert new rows
-    INSERT INTO marks (color, image, map, positionx, positionx2, positiony, positiony2, size, type)
-    VALUES (_color, _image, _map, _positionx, _positionx2, _positiony, _positiony2, _size, _type);
+    INSERT INTO marks ( image, map, positionx, positiony, sizex, sizey)
+    VALUES ( _image, _map, _positionx, _positiony, _sizex, _sizey);
 
     result := '{}';
     RETURN result;
@@ -141,3 +138,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION delete_mark(
+    click_x NUMERIC,
+    click_y NUMERIC,
+    radius NUMERIC,
+    selected_map TEXT
+) RETURNS VOID AS $$
+BEGIN
+    DELETE FROM marks
+    WHERE click_x >=  positionx- radius
+      AND click_x <= positionx + radius
+      AND click_y  >= positiony - radius
+      AND click_y <= positiony + radius
+      AND map = selected_map;
+END;
+$$ LANGUAGE plpgsql;
