@@ -1,0 +1,27 @@
+version: '3.4'
+
+services:
+  postgres:
+    image: postgres:15.2
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    ports:
+      - "5432:5432"
+    volumes:
+      - "./data:/var/lib/postgresql/data:Z"
+      - ./init-db.d:/docker-entrypoint-initdb.d
+  
+  postgrest:
+    image: postgrest/postgrest
+    depends_on:
+      - postgres
+    environment:
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_URI: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres/$POSTGRES_DB
+      PGRST_DB_ANON_ROLE: $POSTGRES_USER
+      PGRST_SERVER_PORT: 3000
+      PGRST_JWT_SECRET: $PGRST_JWT_SECRET
+    ports:
+      - 3000:3000
